@@ -32,8 +32,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ e
       <Motion />
 
       {/* Hero */}
-      <section id="check" className="relative mx-auto overflow-x-clip grid min-h-[calc(100dvh-3.5rem)] max-w-7xl items-center gap-8 px-4 pb-16 pt-8 sm:px-8 lg:grid-cols-12">
-        <ForwardGlobe className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] opacity-50 lg:inset-y-0 lg:left-[44%] lg:right-0 lg:h-auto lg:opacity-100" />
+      <section id="check" className="relative mx-auto grid min-h-[calc(100dvh-3.5rem)] max-w-7xl items-center gap-8 px-4 pb-16 pt-8 sm:px-8 lg:grid-cols-12">
+        <ForwardGlobe className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] opacity-50 lg:inset-y-0 lg:left-[50%] lg:right-[clamp(-12rem,calc((80rem-100vw)/2),0px)] lg:h-auto lg:opacity-100" />
         <p aria-hidden className="absolute bottom-6 right-8 hidden items-center gap-4 font-mono text-[10px] uppercase tracking-[0.14em] text-muted lg:flex">
           <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-signal" />False</span>
           <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-ok" />True</span>
