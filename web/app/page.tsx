@@ -34,8 +34,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ e
       {/* Hero */}
       <section id="check" className="relative mx-auto overflow-x-clip grid min-h-[calc(100dvh-3.5rem)] max-w-7xl items-center gap-8 px-4 pb-16 pt-8 sm:px-8 lg:grid-cols-12">
         <ForwardGlobe className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] opacity-50 lg:inset-y-0 lg:left-[46%] lg:right-[-10%] lg:h-auto lg:opacity-100" />
-        <p className="absolute bottom-6 right-8 hidden max-w-[16rem] text-right font-mono text-[10px] uppercase leading-relaxed tracking-[0.14em] text-muted lg:block">
-          Fig. 1 · A forward spreading through a network, scanned claim by claim
+        <p aria-hidden className="absolute bottom-6 right-8 hidden items-center gap-4 font-mono text-[10px] uppercase tracking-[0.14em] text-muted lg:flex">
+          <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-signal" />False</span>
+          <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-ok" />True</span>
+          <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-muted" />Not checked yet</span>
         </p>
 
         <div className="relative lg:col-span-6">

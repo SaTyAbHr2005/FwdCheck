@@ -31,7 +31,7 @@ export default function Pipeline() {
     <div ref={root} className="overflow-hidden bg-ink text-paper md:h-dvh">
       <div className="flex h-full flex-col justify-center py-20 md:py-0">
         <div className="mx-auto mb-10 w-full max-w-7xl px-4 sm:px-8">
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-signal">Fig. 3 · The pipeline</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-signal">How it works</p>
           <h2 className="mt-3 max-w-2xl font-serif text-5xl leading-[0.95] sm:text-7xl">Six steps between a rumour and the truth.</h2>
           <div className="mt-8 hidden h-px bg-paper/20 md:block"><div className="pipe-progress h-px origin-left bg-signal" /></div>
         </div>

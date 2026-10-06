@@ -41,7 +41,7 @@ export default function XRayDemo() {
   return (
     <div ref={root} className="mx-auto grid min-h-dvh max-w-7xl content-center gap-10 px-4 py-20 sm:px-8 lg:grid-cols-12 lg:py-0">
       <div className="lg:col-span-12">
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-signal">Fig. 2 · Claim X-Ray</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-signal">Claim X-Ray</p>
         <h2 className="mt-3 max-w-3xl font-serif text-5xl leading-[0.95] sm:text-7xl">One forward. <em>Three</em> claims. Three different answers.</h2>
       </div>
 
