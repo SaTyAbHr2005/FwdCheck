@@ -1,0 +1,14 @@
+fastapi>=0.115
+uvicorn[standard]
+python-multipart
+python-dotenv
+httpx
+google-genai
+groq
+trafilatura
+pymupdf
+ddgs
+edge-tts
+gTTS
+supabase
+pytest
