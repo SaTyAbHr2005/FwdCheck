@@ -87,6 +87,7 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
             : "text-[clamp(1.35rem,2.4vw,1.9rem)] leading-[1.5]"}`}>{r.summary}</p>
           <div data-rise className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <audio controls preload="none" src={`${API}/check/${r.id}/voice.mp3`} className="h-11 w-full sm:max-w-xs" aria-label="Listen to the answer" />
+            {r.claims.length > 0 && <>
             <a href={`/api/card/${r.id}`} download={`fwdcheck-${r.id.slice(0, 8)}.png`}
               className="rounded-full border border-ink px-5 py-2.5 text-center text-[15px] transition-colors hover:bg-ink hover:text-paper">
               Download card ↓
@@ -95,14 +96,14 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
               className="rounded-full bg-ink px-5 py-2.5 text-center text-[15px] text-paper transition-colors hover:bg-signal">
               Send to the group ↗
             </a>
+            </>}
           </div>
         </div>
       </section>
 
-      {/* Claim X-Ray */}
-      <section className="border-t border-line pt-10">
+      {/* Claim X-Ray (the summary already says when there's nothing to check) */}
+      {r.claims.length > 0 && <section className="border-t border-line pt-10">
         <h2 data-rise className="font-mono text-[11px] uppercase tracking-[0.2em] text-signal">Claim X-Ray · {r.claims.length} {r.claims.length === 1 ? "claim" : "claims"}</h2>
-        {r.claims.length === 0 && <p data-rise className="mt-6 font-serif text-3xl">No checkable facts in this message.</p>}
         <ol className="mt-4">
           {r.claims.map((c, i) => {
             const s = STYLE[c.verdict] ?? STYLE.UNVERIFIABLE;
@@ -151,7 +152,7 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
             );
           })}
         </ol>
-      </section>
+      </section>}
 
       {/* Original + Manipulation Radar */}
       <section className="grid gap-8 pt-14 lg:grid-cols-12">
