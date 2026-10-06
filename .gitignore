@@ -9,3 +9,4 @@ node_modules/
 *.mp3
 !api/tests/fixtures/*.mp3
 .claude/
+FwdCheck_How_It_Works.pdf
