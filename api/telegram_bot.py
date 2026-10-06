@@ -37,7 +37,7 @@ async def handle_update(update: dict):
     chat = msg.get("chat", {}).get("id")
     if not chat:
         return
-    base, web = _base(), os.environ["WEB_ORIGIN"]
+    base, web = _base(), os.environ["WEB_ORIGIN"].split(",")[0].strip()
     async with httpx.AsyncClient(timeout=60) as c:
         text = msg.get("text") or msg.get("caption")
         if text == "/start":

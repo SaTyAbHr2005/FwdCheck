@@ -31,7 +31,7 @@ async def handle(body: dict):
         msg = body["entry"][0]["changes"][0]["value"]["messages"][0]
     except (KeyError, IndexError):
         return                                     # delivery/read status updates: ignore
-    to, kind, web = msg["from"], msg["type"], os.environ["WEB_ORIGIN"]
+    to, kind, web = msg["from"], msg["type"], os.environ["WEB_ORIGIN"].split(",")[0].strip()
     async with httpx.AsyncClient(timeout=60) as c:
         if kind not in ("text", "image", "audio", "document"):
             await _send(c, to, {"type": "text", "text": {"body": "Please send text, a screenshot, a voice note, a PDF or a link."}})

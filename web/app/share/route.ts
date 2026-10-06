@@ -1,5 +1,8 @@
 import { API } from "@/lib/api";
 
+// Relative redirect: works on any domain (Vercel, tunnels, localhost).
+const redirect = (path: string) => new Response(null, { status: 303, headers: { Location: path } });
+
 // Android "Share -> FwdCheck" lands here (see public/manifest.json share_target).
 export async function POST(req: Request) {
   const inFd = await req.formData();
@@ -10,10 +13,7 @@ export async function POST(req: Request) {
   if (file instanceof File && file.size > 0) fd.append("file", file);
   try {
     const r = await fetch(`${API}/check`, { method: "POST", body: fd });
-    if (r.ok) {
-      const j = await r.json();
-      return Response.redirect(new URL(`/r/${j.id}`, req.url), 303);
-    }
+    if (r.ok) return redirect(`/r/${(await r.json()).id}`);
   } catch {}
-  return Response.redirect(new URL("/?error=share", req.url), 303);
+  return redirect("/?error=share");
 }

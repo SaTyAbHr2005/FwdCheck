@@ -1,6 +1,13 @@
 import { ImageResponse } from "next/og";
 import { getResult, STYLE } from "@/lib/api";
 
+// Public host for the "Full proof" line. Behind proxies/tunnels req.url says localhost, so prefer configured values.
+function siteHost(req: Request): string {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (configured) return configured.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  return req.headers.get("x-forwarded-host") ?? new URL(req.url).host;
+}
+
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const r = await getResult(id);
@@ -8,7 +15,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const s = STYLE[r.overall] ?? STYLE.UNVERIFIABLE;
   const lines = r.claims.filter(c => c.verdict !== "UNVERIFIABLE").slice(0, 4);
   const sources = [...new Set(r.claims.flatMap(c => c.evidence.map(e => e.source)))].slice(0, 3);
-  const link = new URL(`/r/${id}`, req.url).host + `/r/${id.slice(0, 8)}…`;
+  const link = siteHost(req) + `/r/${id.slice(0, 8)}…`;
   const mark: Record<string, string> = { VERIFIED: "TRUE", FALSE: "FALSE", OUTDATED: "OUTDATED", PARTLY_TRUE: "PARTLY TRUE" };
 
   return new ImageResponse(

@@ -62,6 +62,8 @@ npm run dev
 ```
 Open http://localhost:3000
 
+Optional `NEXT_PUBLIC_SITE_URL` sets the public address printed on share cards (on Vercel it is detected automatically).
+
 **Tests**
 ```bash
 cd api
