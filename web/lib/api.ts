@@ -12,19 +12,20 @@ export type TrendingRow = { id: string; raw_text: string; overall: string; hit_c
 
 export const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-export const STYLE: Record<string, { label: string; cls: string; emoji: string; color: string }> = {
-  VERIFIED: { label: "Verified", cls: "bg-green-50 text-green-900 border-green-300", emoji: "🟢", color: "#16a34a" },
-  TRUE: { label: "True", cls: "bg-green-50 text-green-900 border-green-300", emoji: "🟢", color: "#16a34a" },
-  FALSE: { label: "False", cls: "bg-red-50 text-red-900 border-red-300", emoji: "🔴", color: "#dc2626" },
-  MISLEADING: { label: "Misleading", cls: "bg-red-50 text-red-900 border-red-300", emoji: "🔴", color: "#dc2626" },
-  OUTDATED: { label: "Outdated", cls: "bg-amber-50 text-amber-900 border-amber-300", emoji: "⏳", color: "#d97706" },
-  PARTLY_TRUE: { label: "Partly true", cls: "bg-amber-50 text-amber-900 border-amber-300", emoji: "🟠", color: "#d97706" },
-  UNVERIFIABLE: { label: "Cannot be confirmed", cls: "bg-gray-50 text-gray-800 border-gray-300", emoji: "⚪", color: "#6b7280" },
-  NO_CLAIMS: { label: "Nothing to check", cls: "bg-gray-50 text-gray-800 border-gray-300", emoji: "⚪", color: "#6b7280" },
+// Hex (not CSS vars) because the OG card renderer needs literal colours.
+export const STYLE: Record<string, { label: string; color: string }> = {
+  VERIFIED: { label: "Verified", color: "#1e7a4c" },
+  TRUE: { label: "True", color: "#1e7a4c" },
+  FALSE: { label: "False", color: "#e0401b" },
+  MISLEADING: { label: "Misleading", color: "#e0401b" },
+  OUTDATED: { label: "Outdated", color: "#b97a06" },
+  PARTLY_TRUE: { label: "Partly true", color: "#b97a06" },
+  UNVERIFIABLE: { label: "Cannot be confirmed", color: "#77736a" },
+  NO_CLAIMS: { label: "Nothing to check", color: "#77736a" },
 };
 
 export const TIER: Record<string, string> = {
-  official: "🏛️ Official", factchecker: "✅ Fact-checker", news: "📰 News", other: "🌐 Web",
+  official: "Official", factchecker: "Fact-checker", news: "News", other: "Web",
 };
 
 export const FLAG: Record<string, string> = {

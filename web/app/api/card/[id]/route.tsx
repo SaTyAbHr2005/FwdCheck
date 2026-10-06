@@ -18,27 +18,36 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const link = siteHost(req) + `/r/${id.slice(0, 8)}…`;
   const mark: Record<string, string> = { VERIFIED: "TRUE", FALSE: "FALSE", OUTDATED: "OUTDATED", PARTLY_TRUE: "PARTLY TRUE" };
 
+  const ink = "#141311", paper = "#f1ece1", muted = "#6d685e";
+
   return new ImageResponse(
     (
-      <div style={{ width: 1080, height: 1080, display: "flex", flexDirection: "column", background: "white", fontSize: 38, color: "#111827" }}>
-        <div style={{ display: "flex", background: s.color, color: "white", padding: "56px 56px", fontSize: 92, fontWeight: 800 }}>
-          {s.label.toUpperCase()}
+      <div style={{ width: 1080, height: 1080, display: "flex", flexDirection: "column", background: paper, color: ink, fontSize: 36, padding: 64 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 24, letterSpacing: 4, color: muted }}>
+          <span>FWDCHECK · FORWARD VERIFICATION</span>
+          <span>№ {id.slice(0, 8)}</span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", padding: "48px 56px", gap: 30, flexGrow: 1 }}>
+        <div style={{ display: "flex", marginTop: 56 }}>
+          <div style={{ display: "flex", border: `8px solid ${s.color}`, borderRadius: 14, color: s.color, padding: "10px 36px",
+            fontSize: 96, fontWeight: 800, letterSpacing: 6, transform: "rotate(-4deg)" }}>
+            {s.label.toUpperCase()}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 28, marginTop: 64, flexGrow: 1 }}>
           {lines.length === 0 && <div style={{ display: "flex" }}>No checkable facts found.</div>}
           {lines.map(c => (
-            <div key={c.claim_id} style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: STYLE[c.verdict]?.color ?? "#6b7280" }}>
+            <div key={c.claim_id} style={{ display: "flex", gap: 24, borderTop: "2px solid #d6cfbf", paddingTop: 20 }}>
+              <div style={{ display: "flex", width: 210, flexShrink: 0, fontSize: 24, fontWeight: 800, letterSpacing: 2, color: STYLE[c.verdict]?.color ?? muted }}>
                 {mark[c.verdict] ?? c.verdict}
               </div>
               <div style={{ display: "flex" }}>{c.claim.length > 90 ? c.claim.slice(0, 88) + "…" : c.claim}</div>
             </div>
           ))}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", padding: "32px 56px", fontSize: 30, color: "#374151", borderTop: "2px solid #e5e7eb" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 26, color: muted }}>
           {sources.length > 0 && <div style={{ display: "flex" }}>Sources: {sources.join(" · ")}</div>}
           <div style={{ display: "flex" }}>Full proof: {link}</div>
-          <div style={{ display: "flex", fontWeight: 800, marginTop: 8 }}>Checked by FwdCheck</div>
+          <div style={{ display: "flex", marginTop: 14, fontSize: 30, fontWeight: 800, color: ink }}>Check before you forward.</div>
         </div>
       </div>
     ),
