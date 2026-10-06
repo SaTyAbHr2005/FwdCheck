@@ -8,6 +8,8 @@ from functools import cache
 from uuid import uuid4
 
 CACHE_DAYS = 30
+# Only these appear on the public trending board: true or personal messages ("good morning") never do.
+FAKE = ("FALSE", "MISLEADING", "OUTDATED", "PARTLY_TRUE")
 
 # ponytail: in-memory fallback when MONGODB_URI is unset. Lost on every restart, single process only;
 # set MONGODB_URI for persistence.
@@ -81,11 +83,11 @@ def get(check_id: str) -> dict | None:
 
 def trending(limit: int = 10) -> list[dict]:
     if using_mongo():
-        docs = list(_col().find({"created_at": {"$gte": _since(7)}},
+        docs = list(_col().find({"created_at": {"$gte": _since(7)}, "overall": {"$in": FAKE}},
                                 {"raw_text": 1, "overall": 1, "hit_count": 1, "created_at": 1})
                     .sort("hit_count", -1).limit(limit))
     else:
-        docs = sorted((d for d in _mem.values() if d["created_at"] >= _since(7)),
+        docs = sorted((d for d in _mem.values() if d["created_at"] >= _since(7) and d["overall"] in FAKE),
                       key=lambda d: d["hit_count"], reverse=True)[:limit]
     return [{"id": d["_id"], "raw_text": d["raw_text"], "overall": d["overall"], "hit_count": d["hit_count"],
              "created_at": d["created_at"].isoformat()} for d in docs]

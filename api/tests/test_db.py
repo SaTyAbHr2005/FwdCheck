@@ -48,3 +48,10 @@ def test_memory_store_trending_orders_by_hits(memory_store):
     db.find_similar("fake two")
     rows = db.trending()
     assert [r["id"] for r in rows] == [b, a] and rows[0]["hit_count"] == 3
+
+
+def test_trending_only_lists_fakes(memory_store):
+    fake = db.save(result("free laptop scheme", "MISLEADING"), "web")
+    db.save(result("good morning friends", "NO_CLAIMS"), "web")
+    db.save(result("diwali is in november", "TRUE"), "web")
+    assert [r["id"] for r in db.trending()] == [fake]
