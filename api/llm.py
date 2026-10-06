@@ -4,7 +4,7 @@ import re
 import time
 from functools import cache
 
-RATE_LIMIT_WAITS = (8, 20)   # seconds; free tier counts requests per minute, so back off twice
+RATE_LIMIT_WAITS = (8, 20)   # seconds; free tier counts requests per minute and preview models get overloaded
 
 
 class LLMError(Exception):
@@ -28,8 +28,12 @@ def _parse(text: str) -> dict:
     return json.loads(text)
 
 
-def _is_rate_limit(e: Exception) -> bool:
-    return "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e)
+# Worth retrying: rate limits (429) and Google-side hiccups (500/503 "model overloaded", timeouts).
+TRANSIENT = ("429", "RESOURCE_EXHAUSTED", "500", "INTERNAL", "503", "UNAVAILABLE", "overloaded", "504", "DEADLINE_EXCEEDED")
+
+
+def _is_transient(e: Exception) -> bool:
+    return any(t in str(e) for t in TRANSIENT)
 
 
 def _gemini_json(prompt: str, files: list[tuple[bytes, str]] | None) -> dict:
@@ -45,13 +49,13 @@ def _gemini_json(prompt: str, files: list[tuple[bytes, str]] | None) -> dict:
 
 def generate_json(prompt: str, files: list[tuple[bytes, str]] | None = None) -> dict:
     """Ask the LLM for a JSON object. files = [(bytes, mime_type)].
-    Gemini first (retried with backoff if rate-limited); Groq as text-only fallback. Raises LLMError if both fail."""
+    Gemini first (retried with backoff on rate limits / overload); Groq as text-only fallback. Raises LLMError if both fail."""
     try:
         for wait in (*RATE_LIMIT_WAITS, None):
             try:
                 return _gemini_json(prompt, files)
             except Exception as e:
-                if wait is None or not _is_rate_limit(e):
+                if wait is None or not _is_transient(e):
                     raise
                 time.sleep(wait)
     except Exception as e:

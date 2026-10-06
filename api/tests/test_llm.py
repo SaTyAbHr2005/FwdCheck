@@ -20,6 +20,18 @@ def test_retries_once_on_rate_limit(monkeypatch):
     assert llm.generate_json("hi") == {"ok": True} and len(calls) == 2
 
 
+def test_retries_when_model_overloaded(monkeypatch):
+    calls = []
+
+    def busy(prompt, files):
+        calls.append(1)
+        if len(calls) == 1:
+            raise RuntimeError("503 UNAVAILABLE. The model is overloaded. Please try again later.")
+        return {"ok": True}
+    monkeypatch.setattr(llm, "_gemini_json", busy)
+    assert llm.generate_json("hi") == {"ok": True} and len(calls) == 2
+
+
 def test_gives_up_after_three_rate_limited_tries(monkeypatch):
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     calls = []
@@ -37,7 +49,7 @@ def test_other_errors_raise_llmerror_without_groq(monkeypatch):
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
 
     def broken(prompt, files):
-        raise RuntimeError("500 internal")
+        raise RuntimeError("400 INVALID_ARGUMENT bad request")
     monkeypatch.setattr(llm, "_gemini_json", broken)
     with pytest.raises(llm.LLMError):
         llm.generate_json("hi")
