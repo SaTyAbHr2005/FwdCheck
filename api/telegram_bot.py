@@ -61,9 +61,9 @@ async def handle_update(update: dict):
                 return
             r = await pipeline.run_check(text=None if data else text, file=data, mime=mime, channel="telegram")
             await c.post(f"{base}/sendMessage", json={"chat_id": chat, "text": format_reply(r, f"{web}/r/{r['id']}")})
-            audio = await voice.tts(r["summary"], r["language"])
-            await c.post(f"{base}/sendAudio", data={"chat_id": chat, "title": "FwdCheck"},
-                         files={"audio": ("fwdcheck.mp3", audio, "audio/mpeg")})
+            if audio := await voice.tts(r["summary"], r["language"]):
+                await c.post(f"{base}/sendAudio", data={"chat_id": chat, "title": "FwdCheck"},
+                             files={"audio": ("fwdcheck.mp3", audio, "audio/mpeg")})
             await c.post(f"{base}/sendPhoto", json={"chat_id": chat, "photo": f"{web}/api/card/{r['id']}"})
         except (LLMError, ValueError, httpx.HTTPError):
             await c.post(f"{base}/sendMessage", json={"chat_id": chat, "text": SORRY})

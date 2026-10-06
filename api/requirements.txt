@@ -9,6 +9,5 @@ trafilatura
 pymupdf
 ddgs
 edge-tts
-gTTS
 supabase
 pytest

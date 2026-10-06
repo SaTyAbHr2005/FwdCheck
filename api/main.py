@@ -85,8 +85,10 @@ async def get_voice(check_id: str):
     r = db.get(check_id)
     if not r:
         raise HTTPException(404, "Not found")
-    return Response(await voice.tts(r["summary"], r["language"]), media_type="audio/mpeg",
-                    headers={"Cache-Control": "public, max-age=86400"})
+    audio = await voice.tts(r["summary"], r["language"])
+    if not audio:
+        raise HTTPException(503, "Voice service unavailable, please try again later")
+    return Response(audio, media_type="audio/mpeg", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/trending", response_model=list[TrendingItem])

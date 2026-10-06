@@ -48,12 +48,12 @@ async def handle(body: dict):
                 data, mime = await _media(c, msg[kind]["id"])
             r = await pipeline.run_check(text=text, file=data, mime=mime, channel="whatsapp")
             await _send(c, to, {"type": "text", "text": {"body": format_reply(r, f"{web}/r/{r['id']}")}})
-            audio = await voice.tts(r["summary"], r["language"])
-            up = await c.post(f"{_g()}/{os.environ['WA_PHONE_NUMBER_ID']}/media", headers=_h(),
-                              data={"messaging_product": "whatsapp", "type": "audio/mpeg"},
-                              files={"file": ("reply.mp3", audio, "audio/mpeg")})
-            if media_id := up.json().get("id"):
-                await _send(c, to, {"type": "audio", "audio": {"id": media_id}})
+            if audio := await voice.tts(r["summary"], r["language"]):
+                up = await c.post(f"{_g()}/{os.environ['WA_PHONE_NUMBER_ID']}/media", headers=_h(),
+                                  data={"messaging_product": "whatsapp", "type": "audio/mpeg"},
+                                  files={"file": ("reply.mp3", audio, "audio/mpeg")})
+                if media_id := up.json().get("id"):
+                    await _send(c, to, {"type": "audio", "audio": {"id": media_id}})
             await _send(c, to, {"type": "image", "image": {"link": f"{web}/api/card/{r['id']}"}})
         except (LLMError, ValueError, httpx.HTTPError):
             await _send(c, to, {"type": "text", "text": {"body": SORRY}})
