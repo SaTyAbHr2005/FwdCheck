@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import hmac
 import logging
@@ -24,7 +25,7 @@ from models import CheckResult, TrendingItem  # noqa: E402
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("fwdcheck")
 
-REQUIRED_ENV = ["GEMINI_API_KEY", "GEMINI_MODEL", "MONGODB_URI", "WEB_ORIGIN"]
+REQUIRED_ENV = ["GEMINI_API_KEY", "GEMINI_MODEL", "WEB_ORIGIN"]
 MAX_FILE = 15 * 1024 * 1024
 ALLOWED = ("image/", "audio/", "application/pdf")
 CHECKS_PER_MINUTE = int(os.environ.get("CHECKS_PER_MINUTE", "6"))
@@ -34,6 +35,12 @@ CHECKS_PER_MINUTE = int(os.environ.get("CHECKS_PER_MINUTE", "6"))
 async def lifespan(_: FastAPI):
     if missing := [k for k in REQUIRED_ENV if not os.environ.get(k)]:
         log.warning("missing env vars: %s (see api/.env.example)", ", ".join(missing))
+    if not db.using_mongo():
+        log.warning("MONGODB_URI not set: results are kept in memory and lost on restart")
+    try:
+        await asyncio.to_thread(db.warm_up)
+    except Exception as e:
+        log.error("database not reachable at startup: %s", e)
     yield
 
 
