@@ -148,7 +148,6 @@ Result = {"id": uuid, "language": str, "input_type": str, "text": str,
   `.gitignore`:
   ```
   .env
-  .venv/
   __pycache__/
   node_modules/
   .next/
@@ -168,12 +167,11 @@ Result = {"id": uuid, "language": str, "input_type": str, "text": str,
   pymupdf
   ddgs
   edge-tts
-  gTTS
   supabase
   pytest
   ```
   ```bash
-  cd api && python -m venv .venv && .venv/Scripts/activate && pip install -r requirements.txt
+  cd api && python -m pip install -r requirements.txt
   ```
 
 - [ ] **0.6 Keys file** — `api/.env.example` (copy to `api/.env` and fill):
@@ -242,7 +240,7 @@ Result = {"id": uuid, "language": str, "input_type": str, "text": str,
 
 ### ✅ CHECKPOINT M0
 ```bash
-cd api && .venv/Scripts/python check_keys.py
+cd api && python check_keys.py
 ```
 Pass = Gemini, Groq, FactCheck, Tavily, Serper all ✅; Supabase ✅ or "checks does not exist".
 Then: `git add -A && git commit -m "chore: setup"` and push to a new GitHub repo.
@@ -270,7 +268,7 @@ Then: `git add -A && git commit -m "chore: setup"` and push to a new GitHub repo
 
 ### ✅ CHECKPOINT M1
 ```bash
-cd api && .venv/Scripts/uvicorn main:app --reload --port 8000
+cd api && python -m uvicorn main:app --reload --port 8000
 ```
 Open http://localhost:8000/health → `{"ok":true}`. Open http://localhost:8000/docs → Swagger page loads. Commit.
 
@@ -329,7 +327,7 @@ Open http://localhost:8000/health → `{"ok":true}`. Open http://localhost:8000/
 
 ### ✅ CHECKPOINT M2
 ```bash
-cd api && .venv/Scripts/pytest tests/test_live.py -k llm -v
+cd api && python -m pytest tests/test_live.py -k llm -v
 ```
 Pass = 1 passed. Also test the fallback once: temporarily set `GEMINI_MODEL=wrong-model` in `.env`, rerun → still passes (Groq answered). Put it back. Commit.
 
@@ -410,7 +408,7 @@ Pass = 1 passed. Also test the fallback once: temporarily set `GEMINI_MODEL=wron
 
 ### ✅ CHECKPOINT M3
 ```bash
-cd api && .venv/Scripts/pytest tests/test_live.py -k ingest -v
+cd api && python -m pytest tests/test_live.py -k ingest -v
 ```
 Pass = 4 passed. Print one output and eyeball it: the Hindi voice note text should be readable Hindi. Commit.
 
@@ -516,7 +514,7 @@ Pass = 4 passed. Print one output and eyeball it: the Hindi voice note text shou
 
 ### ✅ CHECKPOINT M4
 ```bash
-cd api && .venv/Scripts/pytest tests/test_radar.py tests/test_live.py -k "radar or extract" -v
+cd api && python -m pytest tests/test_radar.py tests/test_live.py -k "radar or extract" -v
 ```
 Pass = all green. Print `extract_claims(...)` for the fixture and check that "₹2000 banned", "30 Sept deadline", "money lost", "fake link", "lemon cures cancer", "mama ji" all appear as separate claims. Commit.
 
@@ -651,7 +649,7 @@ Pass = all green. Print `extract_claims(...)` for the fixture and check that "�
 
 ### ✅ CHECKPOINT M5
 ```bash
-cd api && .venv/Scripts/pytest tests/test_sources.py tests/test_live.py -k "tiers or allowlist or evidence" -v
+cd api && python -m pytest tests/test_sources.py tests/test_live.py -k "tiers or allowlist or evidence" -v
 ```
 Pass = green. Print the evidence list: every item has a URL, a source name and some page text; most have a date. Commit.
 
@@ -750,7 +748,7 @@ Pass = green. Print the evidence list: every item has a URL, a source name and s
 
 ### ✅ CHECKPOINT M6
 ```bash
-cd api && .venv/Scripts/pytest tests/test_judge.py tests/test_live.py -k judge -v
+cd api && python -m pytest tests/test_judge.py tests/test_live.py -k judge -v
 ```
 Pass = green. Read the explanation for the outdated test — it must mention 2023. Commit.
 
@@ -821,7 +819,7 @@ Pass = green. Read the explanation for the outdated test — it must mention 202
 
 ### ✅ CHECKPOINT M7
 ```bash
-cd api && .venv/Scripts/pytest tests/test_guardrail.py -v
+cd api && python -m pytest tests/test_guardrail.py -v
 ```
 Pass = 6 passed. Commit.
 
@@ -1210,29 +1208,28 @@ Open `https://<your-app>.vercel.app/api/card/<id>` → PNG shows verdict, 2–4 
 
 ## M12 — Voice reply (TTS)
 
-**Produces:** `tts(text: str, language: str) -> bytes` (mp3).
+**Produces:** `tts(text: str, language: str) -> bytes` (mp3; `b""` if the voice service fails, so the text reply is still sent).
 
 - [ ] **12.1 `api/voice.py`**
   ```python
-  import asyncio, io, edge_tts
-  from gtts import gTTS
+  import logging
+
+  log = logging.getLogger("fwdcheck.voice")
 
   VOICES = {"hi": "hi-IN-SwaraNeural", "hinglish": "hi-IN-SwaraNeural", "mr": "mr-IN-AarohiNeural",
             "en": "en-IN-NeerjaNeural"}
-  GTTS_LANG = {"hi": "hi", "hinglish": "hi", "mr": "mr", "en": "en"}
 
   async def tts(text: str, language: str) -> bytes:
-      text = text[:1500]
       try:
+          import edge_tts
           buf = b""
-          async for chunk in edge_tts.Communicate(text, VOICES.get(language, VOICES["en"])).stream():
-              if chunk["type"] == "audio": buf += chunk["data"]
-          if buf: return buf
-      except Exception:
-          pass
-      out = io.BytesIO()                                   # fallback: gTTS
-      await asyncio.to_thread(lambda: gTTS(text, lang=GTTS_LANG.get(language, "en")).write_to_fp(out))
-      return out.getvalue()
+          async for chunk in edge_tts.Communicate(text[:1500], VOICES.get(language, VOICES["en"])).stream():
+              if chunk["type"] == "audio":
+                  buf += chunk["data"]
+          return buf
+      except Exception as e:
+          log.warning("tts failed: %s", e)
+          return b""
   ```
 - [ ] **12.2 Route** in `main.py`:
   ```python
@@ -1531,7 +1528,7 @@ Check 3 different forwards, one of them 3 times → `/trending` lists them with 
 
 ### ✅ CHECKPOINT M17
 ```bash
-cd api && .venv/Scripts/python tests/eval/run_eval.py
+cd api && python tests/eval/run_eval.py
 ```
 Pass = it finishes and prints a percentage. Look at every ❌, fix prompts or the allowlist, rerun. Put the final "Same meaning" % and 2 honest failure examples in the PPT. Commit.
 

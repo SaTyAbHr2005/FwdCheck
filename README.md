@@ -38,7 +38,7 @@ input (WhatsApp / Telegram / website / Android share)
 - **AI:** Google Gemini Flash-Lite (Groq as backup)
 - **Evidence:** Google Fact Check Tools API, Tavily / Serper / DuckDuckGo, trafilatura
 - **Database:** Supabase Postgres (`pg_trgm` for repeat-forward matching)
-- **Voice:** edge-tts (gTTS fallback)
+- **Voice:** edge-tts neural voices (Hindi, Marathi, English)
 - **Bots:** WhatsApp Cloud API, Telegram Bot API
 
 ## Run locally
@@ -46,11 +46,10 @@ input (WhatsApp / Telegram / website / Android share)
 **Backend**
 ```bash
 cd api
-python -m venv .venv
-.venv/Scripts/pip install -r requirements.txt     # macOS/Linux: .venv/bin/pip
-cp .env.example .env                              # then fill in your free API keys
-.venv/Scripts/python check_keys.py                # every service should say OK
-.venv/Scripts/uvicorn main:app --reload --port 8000
+python -m pip install -r requirements.txt
+cp .env.example .env     # then fill in your free API keys
+python check_keys.py     # every service should say OK
+python -m uvicorn main:app --reload --port 8000
 ```
 Create the database table once: paste `api/schema.sql` into Supabase → SQL Editor → Run.
 
@@ -66,8 +65,8 @@ Open http://localhost:3000
 **Tests**
 ```bash
 cd api
-.venv/Scripts/pytest                      # offline tests; live tests run automatically when keys are set
-.venv/Scripts/python tests/eval/run_eval.py   # accuracy on known forwards
+python -m pytest               # offline tests; live tests run automatically when keys are set
+python tests/eval/run_eval.py  # accuracy on known forwards
 ```
 
 ## Project structure

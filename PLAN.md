@@ -92,7 +92,7 @@ Every checked message and claim is stored. Same or near-identical forward (Postg
 | Web search #2 | **Serper** | 2,500 queries one-time, no card |
 | Web search #3 (unlimited, unofficial) | `ddgs` (DuckDuckGo) Python lib + **Wikipedia API** | no key; rate-limited; last-resort fallback |
 | Page/PDF extraction | `trafilatura`, `PyMuPDF` | open source |
-| Voice reply | `edge-tts` (`hi-IN-MadhurNeural`, `mr-IN-AarohiNeural`, …) → fallback `gTTS` → on website, browser `speechSynthesis` | free (edge-tts/gTTS are unofficial, so keep fallbacks) |
+| Voice reply | `edge-tts` (`hi-IN-SwaraNeural`, `mr-IN-AarohiNeural`, …); if it fails, the text reply is still sent | free (unofficial service, so voice is optional, never blocking) |
 | Database + "already seen" cache | **Supabase** Postgres + `pg_trgm` text similarity (forwards are copy-pasted, so near-identical text matching is enough; no embedding model needed) | no card, 500 MB, 2 projects, pauses after 7 days idle (the cron ping keeps it awake) |
 | WhatsApp | **Meta WhatsApp Cloud API** test number | free; can only message **up to 5 pre-verified phone numbers**; 1,000 free service messages/month per number (from 1 Oct 2026). Needs a Facebook account; make a permanent System-User token (test token expires in 24 h) |
 | Telegram (open to anyone, e.g. judges) | Bot API via @BotFather | free, unlimited |
