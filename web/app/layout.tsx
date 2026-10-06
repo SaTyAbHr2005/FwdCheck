@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: motionBoot }} />
       </head>
-      <body className="min-h-dvh overflow-x-clip">
+      <body className="min-h-dvh">
         <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-paper/90 backdrop-blur-[2px]">
           <nav className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-8">
             <Link href="/" className="flex items-baseline gap-2">
@@ -47,7 +47,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </nav>
         </header>
         <SmoothScroll />
-        <div className="pt-14">{children}</div>
+        {/* Clip sideways overflow (slide-in animations) here: overflow set on <body> is handed to the viewport and stops clipping. */}
+        <div className="overflow-x-clip pt-14">{children}</div>
         <footer className="border-t border-line">
           <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-8 font-mono text-[11px] uppercase tracking-[0.14em] text-muted sm:flex-row sm:justify-between sm:px-8">
             <span>FwdCheck · Is this forward true?</span>

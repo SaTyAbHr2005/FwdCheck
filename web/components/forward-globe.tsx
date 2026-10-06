@@ -98,6 +98,8 @@ export default function ForwardGlobe({ className = "" }: { className?: string })
       const { width, height } = el.getBoundingClientRect();
       renderer.setSize(width, height, false);
       camera.aspect = width / Math.max(height, 1);
+      // Back the camera off when the box is narrower than tall, so the sphere (radius ~2.6 incl. wobble) never clips sideways.
+      camera.position.z = Math.max(9.2, 2.9 / (Math.tan(THREE.MathUtils.degToRad(19)) * camera.aspect));
       camera.updateProjectionMatrix();
       renderer.render(scene, camera);
     };
