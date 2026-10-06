@@ -6,6 +6,8 @@ FwdCheck checks WhatsApp forwards — **text, screenshots, voice notes, PDFs or 
 
 Hack on Track 2026 · Domain: GenAI · PS 3 "Is This Forward True?"
 
+**Live:** [fwd-check.vercel.app](https://fwd-check.vercel.app) · API [fwdcheck.onrender.com](https://fwdcheck.onrender.com/health) (free tier: the first request after a quiet spell takes ~30 s to wake up)
+
 ## What makes it different
 
 | Feature | What it does |
@@ -16,7 +18,8 @@ Hack on Track 2026 · Domain: GenAI · PS 3 "Is This Forward True?"
 | 🖼️ **Rebuttal Card** | Shareable image with the verdict and sources to post back in the family group |
 | 📎 **No source, no verdict** | Every quote is checked against the real source page in code; unproven claims become "Cannot be confirmed" |
 | 🚩 **Manipulation Radar** | Flags urgency, fear, chain-forward, fake authority, miracle claims, suspicious links |
-| 🔥 **Trending fakes + instant answers** | Repeat forwards answered from cache; dashboard of the most-checked fakes |
+| 🔥 **Trending fakes + instant answers** | Repeat forwards answered from cache; board of the week's most-checked fakes (only False / Misleading / Outdated / Partly true, so personal messages never show up) |
+| 📲 **Share straight from WhatsApp** | Installable app (PWA): Android "Share → FwdCheck" opens a live "Checking…" screen, and results can be sent back to the group in one tap |
 
 ## How it works
 
@@ -34,7 +37,8 @@ input (WhatsApp / Telegram / website / Android share)
 ## Tech stack (100% free tier)
 
 - **Backend:** Python FastAPI on Render — `api/`
-- **Website:** Next.js on Vercel — `web/`
+- **Website:** Next.js 16 + React 19 + Tailwind CSS v4 on Vercel — `web/`
+- **Motion:** Three.js (forward-network globe), GSAP + ScrollTrigger + SplitText (scroll-driven Claim X-Ray demo, sliding pipeline), Lenis smooth scroll; all motion is off for users with "reduce motion" set
 - **AI:** Google Gemini Flash-Lite (Groq as backup)
 - **Evidence:** Google Fact Check Tools API, Tavily / Serper / DuckDuckGo, trafilatura
 - **Database:** MongoDB Atlas (free M0) — repeat forwards matched by a normalised-text fingerprint
@@ -75,5 +79,8 @@ python tests/eval/run_eval.py  # accuracy on known forwards
 
 ```
 api/   FastAPI backend: ingest → extract → sources → judge → guardrail → pipeline, bots, voice
-web/   Next.js website: check form, claim x-ray result, rebuttal card, trending, PWA share target
+web/   Next.js website
+  app/         pages: home, /r/[id] result, /trending, /share (+ /share/checking), /api/card/[id] share image
+  components/  globe (Three.js), Claim X-Ray demo, pipeline, motion layer, progress steps
+  public/      PWA manifest, service worker (share target), icons
 ```
