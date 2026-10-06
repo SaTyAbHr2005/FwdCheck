@@ -33,6 +33,29 @@ export const FLAG: Record<string, string> = {
   miracle: "Miracle claim", suspicious_link: "Suspicious link", other: "Other trick",
 };
 
+/** Android share-target fields (text, url, file) -> the /check form. */
+export function fromShare(inFd: FormData): FormData {
+  const fd = new FormData();
+  const text = [inFd.get("text"), inFd.get("url")].filter(v => typeof v === "string" && v).join(" ").trim();
+  if (text) fd.append("text", text);
+  const file = inFd.get("file");
+  if (file instanceof File && file.size > 0) fd.append("file", file);
+  return fd;
+}
+
+/** Run a check; returns the result id. Errors carry a message fit to show the user. */
+export async function postCheck(fd: FormData): Promise<string> {
+  let r: Response;
+  try {
+    r = await fetch(`${API}/check`, { method: "POST", body: fd });
+  } catch {
+    throw new Error("Can't reach the server. It may be waking up, try again in 30 seconds.");
+  }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || "Something went wrong. Please try again.");
+  return j.id;
+}
+
 export async function getResult(id: string): Promise<Result | null> {
   try {
     const r = await fetch(`${API}/check/${id}`, { cache: "no-store" });

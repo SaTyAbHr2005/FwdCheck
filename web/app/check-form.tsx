@@ -1,16 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { API } from "@/lib/api";
-
-const STAGES = [
-  "Reading the message",
-  "Splitting it into claims",
-  "Searching fact-checkers & official sites",
-  "Matching every quote to its source page",
-  "Writing the verdict in your language",
-];
-const STAGE_AT = [0, 2500, 5500, 11000, 15000]; // ms; rough match to real pipeline timings
+import { postCheck } from "@/lib/api";
+import CheckingSteps from "@/components/checking-steps";
 
 const EXAMPLES = [
   { label: "₹2000 notes", text: "🚨 URGENT: RBI has announced ₹2000 notes will stop being legal tender from tomorrow. Banks will exchange them only till Friday. Forward to every group you are in!" },
@@ -21,32 +13,21 @@ export default function CheckForm({ initialError }: { initialError?: string }) {
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
-  const [stage, setStage] = useState(0);
   const [drag, setDrag] = useState(false);
   const [err, setErr] = useState(initialError ?? "");
   const router = useRouter();
 
-  useEffect(() => {
-    if (!busy) return;
-    const timers = STAGE_AT.map((ms, i) => setTimeout(() => setStage(i), ms));
-    return () => timers.forEach(clearTimeout);
-  }, [busy]);
-
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setStage(0);
     setErr("");
     const fd = new FormData();
     if (text.trim()) fd.append("text", text.trim());
     if (file) fd.append("file", file);
     try {
-      const r = await fetch(`${API}/check`, { method: "POST", body: fd });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.detail || "Something went wrong. Please try again.");
-      router.push(`/r/${j.id}`);
+      router.push(`/r/${await postCheck(fd)}`);
     } catch (e) {
-      setErr(e instanceof Error && e.message !== "Failed to fetch" ? e.message : "Can't reach the server. It may be waking up, try again in 30 seconds.");
+      setErr((e as Error).message);
       setBusy(false);
     }
   }
@@ -103,16 +84,7 @@ export default function CheckForm({ initialError }: { initialError?: string }) {
         </div>
       )}
 
-      {busy && (
-        <ol aria-live="polite" className="mx-2 mb-2 mt-3 space-y-1.5 border-t border-line pt-3 font-mono text-xs">
-          {STAGES.map((s, i) => (
-            <li key={s} className={`flex items-center gap-2 transition-opacity ${i > stage ? "opacity-30" : ""}`}>
-              <span className={`inline-block size-2 rounded-full ${i < stage ? "bg-ok" : i === stage ? "animate-pulse bg-signal" : "bg-muted"}`} />
-              {s}{i < stage && " ✓"}
-            </li>
-          ))}
-        </ol>
-      )}
+      {busy && <CheckingSteps className="mx-2 mb-2 mt-3 border-t border-line pt-3" />}
 
       {err && <p role="alert" className="mx-2 mb-2 mt-3 rounded-xl border border-signal/40 px-3 py-2 text-sm text-signal">{err}</p>}
     </form>
