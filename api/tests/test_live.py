@@ -19,8 +19,8 @@ def test_llm_json():
 
 def test_ingest_image():
     from ingest import to_text
-    out = to_text(file=(F / "forward.png").read_bytes(), mime="image/png")
-    assert "2000" in out["text"] and out["input_type"] == "image"
+    out = to_text(file=(F / "forward.png").read_bytes(), mime="image/png")   # Marathi free-recharge scam screenshot
+    assert "239" in out["text"] and out["language"] == "mr" and out["input_type"] == "image"
 
 
 def test_ingest_audio():
@@ -31,8 +31,14 @@ def test_ingest_audio():
 
 def test_ingest_pdf():
     from ingest import to_text
-    out = to_text(file=(F / "circular.pdf").read_bytes(), mime="application/pdf")
-    assert "2000" in out["text"] and out["input_type"] == "pdf"
+    out = to_text(file=(F / "circular.pdf").read_bytes(), mime="application/pdf")   # text PDF: fake tax-refund letter
+    assert "15,490" in out["text"] and out["input_type"] == "pdf"
+
+
+def test_ingest_scanned_pdf():
+    from ingest import to_text
+    out = to_text(file=(F / "scanned.pdf").read_bytes(), mime="application/pdf")   # image-only PDF: read by Gemini
+    assert "NASA" in out["text"] and out["input_type"] == "pdf"
 
 
 def test_ingest_url():
