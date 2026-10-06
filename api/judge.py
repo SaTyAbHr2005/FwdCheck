@@ -43,7 +43,8 @@ def judge_claims(claims: list[dict], evidence: list[dict], language: str, today:
                                       evidence=json.dumps(slim_ev, ensure_ascii=False)))
     text_of = {c["id"]: c["text"] for c in claims}
     verdicts = []
-    for v in out.get("claims", []):
+    for i, v in enumerate(out.get("claims", []), 1):
+        v["claim_id"] = str(v.get("claim_id") or f"C{i}")
         v["verdict"] = v.get("verdict") if v.get("verdict") in VERDICTS else "UNVERIFIABLE"
         v["claim"] = v.get("claim") or text_of.get(v.get("claim_id"), "")
         for k, default in (("evidence", []), ("timeline", []), ("what_is_wrong", ""), ("explanation", ""), ("confidence", 0.0)):

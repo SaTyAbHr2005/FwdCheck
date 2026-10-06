@@ -1,16 +1,31 @@
 """API tests that need no keys: the pipeline is replaced with a fake."""
-import os
+import hashlib
+import hmac
+import json
+
+import pytest
 from fastapi.testclient import TestClient
 
 import main
 import pipeline
+import ratelimit
 from llm import LLMError
 
 client = TestClient(main.app)
 
+RESULT = {"id": "abc", "language": "en", "input_type": "text", "text": "hello", "overall": "FALSE",
+          "summary": "Not true.", "red_flags": [], "cached": False, "latency_ms": 1200,
+          "claims": [{"claim_id": "C1", "claim": "x", "verdict": "FALSE", "confidence": 0.9,
+                      "evidence": [{"quote": "a real quote here", "url": "https://rbi.org.in/x"}]}]}
+
+
+@pytest.fixture(autouse=True)
+def fresh_rate_limits():
+    ratelimit._hits.clear()
+
 
 def test_health():
-    assert client.get("/health").json() == {"ok": True}
+    assert client.get("/health").json()["ok"] is True
 
 
 def test_empty_request_rejected():
@@ -29,15 +44,27 @@ def test_llm_down_gives_503(monkeypatch):
     assert client.post("/check", data={"text": "RBI banned 2000 notes"}).status_code == 503
 
 
-def test_check_passes_text_to_pipeline(monkeypatch):
+def test_check_returns_typed_result(monkeypatch):
     seen = {}
 
     async def fake(text, url, data, mime, channel):
         seen.update(text=text, channel=channel)
-        return {"id": "x", "overall": "FALSE"}
+        return RESULT
     monkeypatch.setattr(pipeline, "run_check", fake)
-    assert client.post("/check", data={"text": "hello"}).json()["overall"] == "FALSE"
+    body = client.post("/check", data={"text": "hello"}).json()
+    assert body["overall"] == "FALSE" and body["claims"][0]["evidence"][0]["tier"] == "other"
     assert seen == {"text": "hello", "channel": "web"}
+
+
+def test_rate_limit_per_ip(monkeypatch):
+    async def fake(*a, **k):
+        return RESULT
+    monkeypatch.setattr(pipeline, "run_check", fake)
+    codes = [client.post("/check", data={"text": "hi"}, headers={"cf-connecting-ip": "1.2.3.4"}).status_code
+             for _ in range(main.CHECKS_PER_MINUTE + 1)]
+    assert codes[:-1] == [200] * main.CHECKS_PER_MINUTE and codes[-1] == 429
+    # a different user is not affected
+    assert client.post("/check", data={"text": "hi"}, headers={"cf-connecting-ip": "5.6.7.8"}).status_code == 200
 
 
 def test_whatsapp_verify(monkeypatch):
@@ -46,6 +73,20 @@ def test_whatsapp_verify(monkeypatch):
     assert ok.text == "42"
     bad = client.get("/whatsapp/webhook", params={"hub.mode": "subscribe", "hub.verify_token": "no", "hub.challenge": "42"})
     assert bad.status_code == 403
+
+
+def test_whatsapp_signature(monkeypatch):
+    monkeypatch.setenv("WA_APP_SECRET", "topsecret")
+    calls = []
+
+    async def fake_handle(body):
+        calls.append(body)
+    monkeypatch.setattr(main.whatsapp_bot, "handle", fake_handle)
+    body = json.dumps({"entry": []}).encode()
+    good = "sha256=" + hmac.new(b"topsecret", body, hashlib.sha256).hexdigest()
+    assert client.post("/whatsapp/webhook", content=body, headers={"X-Hub-Signature-256": good}).status_code == 200
+    assert client.post("/whatsapp/webhook", content=body, headers={"X-Hub-Signature-256": "sha256=forged"}).status_code == 403
+    assert len(calls) == 1
 
 
 def test_telegram_rejects_wrong_secret(monkeypatch):

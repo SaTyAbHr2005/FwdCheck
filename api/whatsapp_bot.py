@@ -2,9 +2,10 @@ import os
 import httpx
 
 import pipeline
+import ratelimit
 import voice
 from llm import LLMError
-from telegram_bot import format_reply, SORRY
+from telegram_bot import format_reply, SORRY, SLOW_DOWN
 
 
 def _g() -> str:
@@ -34,6 +35,9 @@ async def handle(body: dict):
     async with httpx.AsyncClient(timeout=60) as c:
         if kind not in ("text", "image", "audio", "document"):
             await _send(c, to, {"type": "text", "text": {"body": "Please send text, a screenshot, a voice note, a PDF or a link."}})
+            return
+        if not ratelimit.allow(f"wa:{to}", limit=5):
+            await _send(c, to, {"type": "text", "text": {"body": SLOW_DOWN}})
             return
         await _send(c, to, {"type": "text", "text": {"body": "🔍 Checking… about 15 seconds"}})
         try:

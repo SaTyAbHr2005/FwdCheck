@@ -1,34 +1,58 @@
+import hashlib
+import hmac
+import logging
 import os
+from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, Form, File, UploadFile, HTTPException, Request, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, PlainTextResponse
+from fastapi import FastAPI, Form, File, UploadFile, HTTPException, Request, BackgroundTasks  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.responses import Response, PlainTextResponse  # noqa: E402
 
-import db
-import pipeline
-import voice
-import telegram_bot
-import whatsapp_bot
-from llm import LLMError
+import db  # noqa: E402
+import pipeline  # noqa: E402
+import ratelimit  # noqa: E402
+import voice  # noqa: E402
+import telegram_bot  # noqa: E402
+import whatsapp_bot  # noqa: E402
+from llm import LLMError  # noqa: E402
+from models import CheckResult, TrendingItem  # noqa: E402
 
-app = FastAPI(title="FwdCheck API")
-app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in os.environ.get("WEB_ORIGIN", "*").split(",")],
-                   allow_methods=["*"], allow_headers=["*"])
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+log = logging.getLogger("fwdcheck")
 
+REQUIRED_ENV = ["GEMINI_API_KEY", "GEMINI_MODEL", "SUPABASE_URL", "SUPABASE_SERVICE_KEY", "WEB_ORIGIN"]
 MAX_FILE = 15 * 1024 * 1024
 ALLOWED = ("image/", "audio/", "application/pdf")
+CHECKS_PER_MINUTE = int(os.environ.get("CHECKS_PER_MINUTE", "6"))
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    if missing := [k for k in REQUIRED_ENV if not os.environ.get(k)]:
+        log.warning("missing env vars: %s (see api/.env.example)", ", ".join(missing))
+    yield
+
+
+app = FastAPI(title="FwdCheck API", version="1.0.0", lifespan=lifespan,
+              description="Checks forwarded messages claim-by-claim against trusted, dated sources.")
+app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in os.environ.get("WEB_ORIGIN", "*").split(",")],
+                   allow_methods=["GET", "POST"], allow_headers=["*"])
 
 
 @app.get("/health")
 def health():
-    return {"ok": True}
+    return {"ok": True, "version": app.version}
 
 
-@app.post("/check")
-async def check(text: str | None = Form(None), url: str | None = Form(None), file: UploadFile | None = File(None)):
+@app.post("/check", response_model=CheckResult)
+async def check(request: Request, text: str | None = Form(None), url: str | None = Form(None),
+                file: UploadFile | None = File(None)):
+    if not ratelimit.allow(f"ip:{ratelimit.client_ip(request.headers, request.client.host)}", CHECKS_PER_MINUTE):
+        raise HTTPException(429, "Too many checks. Please wait a minute and try again.")
     data = mime = None
     if file and file.filename:
         data = await file.read()
@@ -41,13 +65,14 @@ async def check(text: str | None = Form(None), url: str | None = Form(None), fil
         raise HTTPException(400, "Nothing to check")
     try:
         return await pipeline.run_check(text, url, data, mime, "web")
-    except LLMError:
+    except LLMError as e:
+        log.error("llm failure: %s", e)
         raise HTTPException(503, "AI service busy, please try again in a minute")
     except ValueError as e:
         raise HTTPException(422, str(e))
 
 
-@app.get("/check/{check_id}")
+@app.get("/check/{check_id}", response_model=CheckResult)
 def get_check(check_id: str):
     r = db.get(check_id)
     if not r:
@@ -60,10 +85,11 @@ async def get_voice(check_id: str):
     r = db.get(check_id)
     if not r:
         raise HTTPException(404, "Not found")
-    return Response(await voice.tts(r["summary"], r["language"]), media_type="audio/mpeg")
+    return Response(await voice.tts(r["summary"], r["language"]), media_type="audio/mpeg",
+                    headers={"Cache-Control": "public, max-age=86400"})
 
 
-@app.get("/trending")
+@app.get("/trending", response_model=list[TrendingItem])
 def get_trending():
     return db.trending()
 
@@ -84,7 +110,16 @@ def wa_verify(req: Request):
     raise HTTPException(403)
 
 
+def valid_meta_signature(body: bytes, header: str | None, secret: str) -> bool:
+    expected = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, header or "")
+
+
 @app.post("/whatsapp/webhook")
 async def wa_webhook(req: Request, bg: BackgroundTasks):
+    body = await req.body()
+    secret = os.environ.get("WA_APP_SECRET")
+    if secret and not valid_meta_signature(body, req.headers.get("X-Hub-Signature-256"), secret):
+        raise HTTPException(403)
     bg.add_task(whatsapp_bot.handle, await req.json())
     return {"ok": True}

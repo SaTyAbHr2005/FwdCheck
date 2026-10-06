@@ -2,6 +2,7 @@ import os
 import httpx
 
 import pipeline
+import ratelimit
 import voice
 from llm import LLMError
 
@@ -9,6 +10,7 @@ EMOJI = {"VERIFIED": "🟢", "FALSE": "🔴", "OUTDATED": "⏳", "PARTLY_TRUE": 
 WELCOME = ("Namaste 🙏 Forward me any message, screenshot, voice note, PDF or link "
            "and I'll check if it's true.")
 SORRY = "Sorry, I couldn't check this right now. Please try again in a minute."
+SLOW_DOWN = "You're sending messages very fast. Please wait a minute and try again."
 
 
 def format_reply(r: dict, link: str) -> str:
@@ -40,6 +42,9 @@ async def handle_update(update: dict):
         text = msg.get("text") or msg.get("caption")
         if text == "/start":
             await c.post(f"{base}/sendMessage", json={"chat_id": chat, "text": WELCOME})
+            return
+        if not ratelimit.allow(f"tg:{chat}", limit=5):
+            await c.post(f"{base}/sendMessage", json={"chat_id": chat, "text": SLOW_DOWN})
             return
         await c.post(f"{base}/sendMessage", json={"chat_id": chat, "text": "🔍 Checking… about 15 seconds"})
         try:
