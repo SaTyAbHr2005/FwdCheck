@@ -1,7 +1,10 @@
 import os
 import json
 import re
+import time
 from functools import cache
+
+RATE_LIMIT_WAIT = 6   # seconds
 
 
 class LLMError(Exception):
@@ -25,16 +28,32 @@ def _parse(text: str) -> dict:
     return json.loads(text)
 
 
+def _is_rate_limit(e: Exception) -> bool:
+    return "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e)
+
+
+def _gemini_json(prompt: str, files: list[tuple[bytes, str]] | None) -> dict:
+    from google.genai import types
+    parts = [types.Part.from_bytes(data=b, mime_type=m) for b, m in (files or [])] + [prompt]
+    r = _gemini().models.generate_content(
+        model=os.environ["GEMINI_MODEL"], contents=parts,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json", temperature=0.1,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)))
+    return _parse(r.text)
+
+
 def generate_json(prompt: str, files: list[tuple[bytes, str]] | None = None) -> dict:
     """Ask the LLM for a JSON object. files = [(bytes, mime_type)].
-    Gemini first; Groq as text-only fallback. Raises LLMError if both fail."""
+    Gemini first (one retry if rate-limited); Groq as text-only fallback. Raises LLMError if both fail."""
     try:
-        from google.genai import types
-        parts = [types.Part.from_bytes(data=b, mime_type=m) for b, m in (files or [])] + [prompt]
-        r = _gemini().models.generate_content(
-            model=os.environ["GEMINI_MODEL"], contents=parts,
-            config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.1))
-        return _parse(r.text)
+        try:
+            return _gemini_json(prompt, files)
+        except Exception as e:
+            if not _is_rate_limit(e):
+                raise
+            time.sleep(RATE_LIMIT_WAIT)      # free tier allows only a few requests per minute
+            return _gemini_json(prompt, files)
     except Exception as e:
         if files or not os.environ.get("GROQ_API_KEY"):
             raise LLMError(f"Gemini failed: {e}") from e

@@ -3,6 +3,8 @@
 > Build order: **M0 → M19**. Never start a module until the previous module's **✅ CHECKPOINT** passes.
 > Tick boxes `- [x]` as you go. Spec: [PLAN.md](PLAN.md) (product, USPs, free stack).
 
+> **Update:** the database is now **MongoDB Atlas (free M0)** instead of Supabase — see `api/db.py`. Env: `MONGODB_URI` replaces `SUPABASE_URL`/`SUPABASE_SERVICE_KEY`; there is no `schema.sql` (indexes are created automatically). Repeat forwards are matched by a normalised-text fingerprint.
+
 **Goal:** WhatsApp/Telegram bot + website that takes a forward (text, screenshot, voice note, PDF, link), splits it into claims, checks each against trusted sources, and replies with per-claim verdicts, evidence, simple Hindi/English/Marathi explanation, voice note and a shareable card.
 
 **Architecture:** One Python **FastAPI** backend on **Render** runs the whole pipeline (`ingest → extract → retrieve → judge → guardrail → respond`) and stores results in **Supabase**. A **Next.js** site on **Vercel** is only UI (calls the backend). Bots (Telegram, WhatsApp) are webhooks on the same backend.

@@ -4,6 +4,8 @@ Hack on Track 2026 · FCRIT Vashi · Plan v1 (5 Oct 2026)
 
 ---
 
+> **Update:** the database is now **MongoDB Atlas (free M0)** instead of Supabase — see `api/db.py`. Env: `MONGODB_URI` replaces `SUPABASE_URL`/`SUPABASE_SERVICE_KEY`; there is no `schema.sql` (indexes are created automatically). Repeat forwards are matched by a normalised-text fingerprint.
+
 ## 0. What the PS actually asks (from the PDF, page 4)
 
 Build an AI system that:

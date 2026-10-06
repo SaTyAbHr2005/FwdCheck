@@ -37,7 +37,7 @@ input (WhatsApp / Telegram / website / Android share)
 - **Website:** Next.js on Vercel — `web/`
 - **AI:** Google Gemini Flash-Lite (Groq as backup)
 - **Evidence:** Google Fact Check Tools API, Tavily / Serper / DuckDuckGo, trafilatura
-- **Database:** Supabase Postgres (`pg_trgm` for repeat-forward matching)
+- **Database:** MongoDB Atlas (free M0) — repeat forwards matched by a normalised-text fingerprint
 - **Voice:** edge-tts neural voices (Hindi, Marathi, English)
 - **Bots:** WhatsApp Cloud API, Telegram Bot API
 
@@ -51,7 +51,7 @@ cp .env.example .env     # then fill in your free API keys
 python check_keys.py     # every service should say OK
 python -m uvicorn main:app --reload --port 8000
 ```
-Create the database table once: paste `api/schema.sql` into Supabase → SQL Editor → Run.
+Database: create a free MongoDB Atlas M0 cluster and put its connection string in `MONGODB_URI` (indexes are created automatically).
 
 **Website**
 ```bash

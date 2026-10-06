@@ -2,7 +2,7 @@ import time
 from collections import defaultdict, deque
 
 # ponytail: in-memory, per-process sliding window. Fine for one Render instance;
-# move to Redis/Supabase if the backend ever runs on more than one instance.
+# move to Redis/MongoDB if the backend ever runs on more than one instance.
 _hits: dict[str, deque] = defaultdict(deque)
 
 

@@ -24,7 +24,7 @@ from models import CheckResult, TrendingItem  # noqa: E402
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("fwdcheck")
 
-REQUIRED_ENV = ["GEMINI_API_KEY", "GEMINI_MODEL", "SUPABASE_URL", "SUPABASE_SERVICE_KEY", "WEB_ORIGIN"]
+REQUIRED_ENV = ["GEMINI_API_KEY", "GEMINI_MODEL", "MONGODB_URI", "WEB_ORIGIN"]
 MAX_FILE = 15 * 1024 * 1024
 ALLOWED = ("image/", "audio/", "application/pdf")
 CHECKS_PER_MINUTE = int(os.environ.get("CHECKS_PER_MINUTE", "6"))
