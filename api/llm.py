@@ -4,7 +4,7 @@ import re
 import time
 from functools import cache
 
-RATE_LIMIT_WAIT = 6   # seconds
+RATE_LIMIT_WAITS = (8, 20)   # seconds; free tier counts requests per minute, so back off twice
 
 
 class LLMError(Exception):
@@ -45,15 +45,15 @@ def _gemini_json(prompt: str, files: list[tuple[bytes, str]] | None) -> dict:
 
 def generate_json(prompt: str, files: list[tuple[bytes, str]] | None = None) -> dict:
     """Ask the LLM for a JSON object. files = [(bytes, mime_type)].
-    Gemini first (one retry if rate-limited); Groq as text-only fallback. Raises LLMError if both fail."""
+    Gemini first (retried with backoff if rate-limited); Groq as text-only fallback. Raises LLMError if both fail."""
     try:
-        try:
-            return _gemini_json(prompt, files)
-        except Exception as e:
-            if not _is_rate_limit(e):
-                raise
-            time.sleep(RATE_LIMIT_WAIT)      # free tier allows only a few requests per minute
-            return _gemini_json(prompt, files)
+        for wait in (*RATE_LIMIT_WAITS, None):
+            try:
+                return _gemini_json(prompt, files)
+            except Exception as e:
+                if wait is None or not _is_rate_limit(e):
+                    raise
+                time.sleep(wait)
     except Exception as e:
         if files or not os.environ.get("GROQ_API_KEY"):
             raise LLMError(f"Gemini failed: {e}") from e
