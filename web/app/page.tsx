@@ -33,12 +33,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ e
 
       {/* Hero */}
       <section id="check" className="relative mx-auto grid min-h-[calc(100dvh-3.5rem)] max-w-7xl items-center gap-8 px-4 pb-16 pt-8 sm:px-8 lg:grid-cols-12">
-        <ForwardGlobe className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] opacity-50 lg:inset-y-0 lg:left-[50%] lg:right-[clamp(-12rem,calc((80rem-100vw)/2),0px)] lg:h-auto lg:opacity-100" />
-        <p aria-hidden className="absolute bottom-6 right-8 hidden items-center gap-4 font-mono text-[10px] uppercase tracking-[0.14em] text-muted lg:flex">
-          <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-signal" />False</span>
-          <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-ok" />True</span>
-          <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-muted" />Not checked yet</span>
-        </p>
+        {/* Globe and its legend share one box, so the legend stays centred under the sphere. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] opacity-50 lg:inset-y-0 lg:left-[50%] lg:right-[clamp(-12rem,calc((80rem-100vw)/2),0px)] lg:h-auto lg:opacity-100">
+          <ForwardGlobe className="absolute inset-0" />
+          <p aria-hidden className="absolute inset-x-0 bottom-6 hidden justify-center gap-4 font-mono text-[10px] uppercase tracking-[0.14em] text-muted lg:flex">
+            <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-signal" />False</span>
+            <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-ok" />True</span>
+            <span className="flex items-center gap-1.5"><i className="size-1.5 rounded-full bg-muted" />Not checked yet</span>
+          </p>
+        </div>
 
         <div className="relative lg:col-span-6">
           <p data-rise className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
