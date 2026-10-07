@@ -10,3 +10,5 @@ node_modules/
 !api/tests/fixtures/*.mp3
 FwdCheck_How_It_Works.pdf
 deck/
+PLAN.md
+IMPLEMENTATION_PLAN.md
