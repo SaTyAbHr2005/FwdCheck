@@ -40,6 +40,16 @@ export default function Motion() {
       ScrollTrigger.refresh();
     });
     document.documentElement.classList.remove("motion");
+
+    // Arriving at /#how from another page: the browser jumped to the section before the pinned sections
+    // (X-Ray, pipeline) added their scroll space, leaving the reader mid-animation. Jump again once they exist.
+    const frame = requestAnimationFrame(() => {
+      const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      if (!target) return;
+      ScrollTrigger.refresh();
+      window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 64 });   // 64 = fixed header
+    });
+    return () => cancelAnimationFrame(frame);
   });
   return null;
 }
