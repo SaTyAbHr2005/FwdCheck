@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="border-t border-line">
           <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-8 font-mono text-[11px] uppercase tracking-[0.14em] text-muted sm:flex-row sm:justify-between sm:px-8">
             <span>FwdCheck · Is this forward true?</span>
-            <span>Hack on Track 2026 · GenAI · PS 3</span>
+            <span>No source, no verdict</span>
           </div>
         </footer>
         <script dangerouslySetInnerHTML={{ __html: "if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')" }} />

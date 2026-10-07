@@ -4,8 +4,6 @@
 
 FwdCheck checks WhatsApp forwards (**text, screenshots, voice notes, PDFs or links**) against trusted, dated sources and replies **claim by claim**, in the user's language, with the proof.
 
-Hack on Track 2026 · Team VisionX · Domain: GenAI · PS 3 "Is This Forward True?"
-
 | | |
 |---|---|
 | **Website / app** | [fwd-check.vercel.app](https://fwd-check.vercel.app) |
