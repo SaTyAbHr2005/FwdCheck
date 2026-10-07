@@ -73,11 +73,21 @@ body::after {
 .ticker { animation: ticker 40s linear infinite; }
 .ticker:hover { animation-play-state: paused; }
 
+/* Checking screen: a scanner line sweeping over the forward, and headlines rising in. */
+.scan {
+  background: linear-gradient(to bottom, transparent 65%, color-mix(in srgb, var(--signal) 12%, transparent) 97%, var(--signal) 97% 99%, transparent 99%);
+  animation: scan 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes scan { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
+.rise { animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes rise { from { transform: translateY(0.3em); } }   /* transform only: text stays readable even if animations stall */
+
 /* Hide motion targets until GSAP takes over (class set in <head>, removed after 2.5s as a safety net). */
 html.motion [data-rise] { opacity: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ticker { animation: none; }
+  .ticker, .rise { animation: none; }
+  .scan { display: none; }
   html.motion [data-rise] { opacity: 1; }
 }
 

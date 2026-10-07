@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { postCheck } from "@/lib/api";
-import CheckingSteps from "@/components/checking-steps";
+import CheckingScreen from "@/components/checking-screen";
 
 const EXAMPLES = [
   { label: "₹2000 notes", text: "🚨 URGENT: RBI has announced ₹2000 notes will stop being legal tender from tomorrow. Banks will exchange them only till Friday. Forward to every group you are in!" },
@@ -84,7 +84,7 @@ export default function CheckForm({ initialError }: { initialError?: string }) {
         </div>
       )}
 
-      {busy && <CheckingSteps className="mx-2 mb-2 mt-3 border-t border-line pt-3" />}
+      {busy && <CheckingScreen submitted={{ text, file }} />}
 
       {err && <p role="alert" className="mx-2 mb-2 mt-3 rounded-xl border border-signal/40 px-3 py-2 text-sm text-signal">{err}</p>}
     </form>

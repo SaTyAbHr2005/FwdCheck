@@ -208,7 +208,7 @@ api/                 FastAPI backend
   tests/             pytest suite, fixtures, accuracy eval
 web/                 Next.js website + PWA
   app/               pages: home, /r/[id] result, /trending, /share (+ /share/checking), /api/card/[id] share image
-  components/        globe (Three.js), Claim X-Ray demo, pipeline, motion layer, progress steps
+  components/        globe (Three.js), Claim X-Ray demo, pipeline, motion layer, full-screen checking screen
   lib/api.ts         API client and verdict styles
   public/            PWA manifest, service worker (share target), icons
 ```
