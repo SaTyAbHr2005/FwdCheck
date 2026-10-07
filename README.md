@@ -54,7 +54,7 @@ If Gemini is overloaded the API retries (after 8 s, then 20 s) and then falls ba
 | Database | MongoDB Atlas (free M0): results, repeat-forward cache, trending |
 | Voice | edge-tts neural voices (Hindi, Marathi, English) |
 | Bots | Telegram Bot API; WhatsApp via the Twilio Sandbox or the Meta Cloud API |
-| Tests | pytest (72 tests, including live reads of a real screenshot, PDFs and a voice note) |
+| Tests | pytest (76 tests, including live reads of a real screenshot, PDFs and a voice note) |
 
 ## Use it
 
@@ -65,7 +65,7 @@ If Gemini is overloaded the API retries (after 8 s, then 20 s) and then falls ba
 2. In WhatsApp, long-press a forward (text, photo, voice note or PDF) → **Share** → **FwdCheck**.
 3. The app opens on a live "Checking…" screen and shows the verdict. Tap **Send to the group** to post the answer back to the group.
 
-**On an iPhone:** iOS doesn't let web apps appear in the Share menu, so use the website (copy and paste, or upload) or the Telegram bot.
+**On an iPhone:** open the site in Safari → Share → **Add to Home Screen** to get the app icon. iOS doesn't let web apps appear in the Share menu, so copy the forward and paste it, or save the screenshot / voice note / PDF and upload it (WhatsApp `.opus` voice notes, `.m4a` recordings and HEIC photos all work). The Telegram bot works too.
 
 **On Telegram:** message [@FwdCheck_AI_Bot](https://t.me/FwdCheck_AI_Bot), or forward any message to it.
 

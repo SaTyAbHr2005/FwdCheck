@@ -41,6 +41,13 @@ export default function CheckingScreen({ submitted, kicker = "Checking your forw
     return () => clearInterval(id);
   }, []);
 
+  // Phones auto-lock after ~30 s and a locked phone can drop the request: keep the screen on while checking.
+  useEffect(() => {
+    let lock: WakeLockSentinel | undefined;
+    navigator.wakeLock?.request("screen").then(l => { lock = l; }, () => {});
+    return () => { lock?.release().catch(() => {}); };
+  }, []);
+
   // Block the page behind: no clicks, no tabbing, no scrolling.
   useEffect(() => {
     if (!mounted) return;
@@ -57,7 +64,8 @@ export default function CheckingScreen({ submitted, kicker = "Checking your forw
   }, [mounted]);
 
   const file = submitted?.file;
-  const isImage = !!file?.type.startsWith("image/");
+  const [imageFailed, setImageFailed] = useState(false);       // e.g. HEIC photos on Android Chrome
+  const isImage = !!file?.type.startsWith("image/") && !imageFailed;
   const img = useRef<HTMLImageElement>(null);
   useEffect(() => {                                   // screenshot preview; the URL lives only while shown
     if (!file || !isImage || !img.current) return;
@@ -73,7 +81,7 @@ export default function CheckingScreen({ submitted, kicker = "Checking your forw
 
   return createPortal(
     <div id="checking-screen" role="dialog" aria-modal="true" aria-labelledby="checking-title" data-lenis-prevent
-      className="fixed inset-0 z-[55] overflow-y-auto bg-paper text-ink">
+      className="fixed inset-0 z-[55] overflow-y-auto overscroll-contain bg-paper text-ink">
       {/* progress rule along the top */}
       <div className="fixed inset-x-0 top-0 h-[3px] bg-line">
         <div className="h-full bg-signal transition-[width] duration-[2500ms] ease-out" style={{ width: `${PROGRESS[stage]}%` }} />
@@ -99,7 +107,7 @@ export default function CheckingScreen({ submitted, kicker = "Checking your forw
                 Forwarded many times
               </p>
               {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview, nothing to optimise */}
-              {isImage && <img ref={img} alt="" className="mt-3 max-h-56 w-full rounded-lg object-cover object-top opacity-90" />}
+              {isImage && <img ref={img} alt="" onError={() => setImageFailed(true)} className="mt-3 max-h-56 w-full rounded-lg object-cover object-top opacity-90" />}
               {file && !isImage && (
                 <p className="mt-4 inline-flex items-center gap-3 rounded-xl border border-line px-4 py-3">
                   <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-signal">{kindOf(file)}</span>

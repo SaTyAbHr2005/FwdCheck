@@ -29,6 +29,11 @@ log = logging.getLogger("fwdcheck")
 REQUIRED_ENV = ["GEMINI_API_KEY", "GEMINI_MODEL", "WEB_ORIGIN"]
 MAX_FILE = 15 * 1024 * 1024
 ALLOWED = ("image/", "audio/", "application/pdf")
+# Phones often send files with no type or "application/octet-stream" (WhatsApp .opus voice notes,
+# iPhone .m4a memos and HEIC photos), so fall back to the file extension. Gemini reads all of these.
+BY_EXT = {"opus": "audio/ogg", "ogg": "audio/ogg", "oga": "audio/ogg", "m4a": "audio/mp4", "aac": "audio/aac",
+          "mp3": "audio/mpeg", "wav": "audio/wav", "amr": "audio/amr", "heic": "image/heic", "heif": "image/heif",
+          "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "pdf": "application/pdf"}
 CHECKS_PER_MINUTE = int(os.environ.get("CHECKS_PER_MINUTE", "6"))
 
 
@@ -65,6 +70,8 @@ async def check(request: Request, text: str | None = Form(None), url: str | None
     if file and file.filename:
         data = await file.read()
         mime = (file.content_type or "").split(";")[0]
+        if not mime.startswith(ALLOWED):
+            mime = BY_EXT.get(file.filename.rsplit(".", 1)[-1].lower(), mime)
         if len(data) > MAX_FILE:
             raise HTTPException(413, "File too large (max 15 MB)")
         if not mime.startswith(ALLOWED):

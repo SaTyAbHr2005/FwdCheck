@@ -37,6 +37,23 @@ def test_wrong_file_type_rejected():
     assert r.status_code == 415
 
 
+@pytest.mark.parametrize("name,sent,expected", [
+    ("PTT-20261007-WA0003.opus", "application/octet-stream", "audio/ogg"),   # WhatsApp voice note
+    ("Recording.m4a", "", "audio/mp4"),                                        # iPhone voice memo
+    ("IMG_0042.HEIC", "application/octet-stream", "image/heic"),              # iPhone photo
+    ("forward.png", "image/png", "image/png"),                                 # a known type is kept
+])
+def test_phone_files_get_their_type_from_the_extension(monkeypatch, name, sent, expected):
+    seen = {}
+
+    async def fake(text, url, data, mime, channel):
+        seen["mime"] = mime
+        return RESULT
+    monkeypatch.setattr(pipeline, "run_check", fake)
+    assert client.post("/check", files={"file": (name, b"data", sent)}).status_code == 200
+    assert seen["mime"] == expected
+
+
 def test_llm_down_gives_503(monkeypatch):
     async def boom(*a, **k):
         raise LLMError("quota")

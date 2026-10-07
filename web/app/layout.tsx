@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   title: "FwdCheck — Is this forward true?",
   description: "Check WhatsApp forwards against trusted sources. Claim-by-claim verdicts with proof, in your language.",
   manifest: "/manifest.json",
+  // iPhone "Add to Home Screen": open full-screen like an app (icon comes from app/apple-icon.png).
+  appleWebApp: { capable: true, title: "FwdCheck", statusBarStyle: "default" },
+  // Forwards are full of numbers (₹2000, dates); don't let iOS turn them into phone links.
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {

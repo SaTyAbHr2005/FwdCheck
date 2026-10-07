@@ -75,6 +75,7 @@ body::after {
 
 /* Checking screen: a scanner line sweeping over the forward, and headlines rising in. */
 .scan {
+  background: linear-gradient(to bottom, transparent 97%, var(--signal) 97% 99%, transparent 99%); /* older iOS: no color-mix */
   background: linear-gradient(to bottom, transparent 65%, color-mix(in srgb, var(--signal) 12%, transparent) 97%, var(--signal) 97% 99%, transparent 99%);
   animation: scan 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }

@@ -34,7 +34,10 @@
           "accept": [
             "image/*",
             "audio/*",
-            "application/pdf"
+            "application/pdf",
+            ".opus",
+            ".m4a",
+            ".heic"
           ]
         }
       ]
