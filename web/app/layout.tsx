@@ -29,12 +29,15 @@ export const viewport: Viewport = {
 
 // Runs before paint: hide [data-rise] for GSAP, but never longer than 2.5s if scripts fail.
 const motionBoot = `if(!matchMedia('(prefers-reduced-motion: reduce)').matches){var d=document.documentElement;d.classList.add('motion');setTimeout(function(){d.classList.remove('motion')},2500)}`;
+// Reloading the home page starts at the top. Otherwise a leftover #how (from the nav link) or the browser's
+// restored scroll lands mid-page, before the pinned sections have made room, i.e. somewhere random.
+const reloadTop = `try{if(location.pathname==='/'){history.scrollRestoration='manual';var n=performance.getEntriesByType('navigation')[0];if(n&&n.type==='reload'&&location.hash)history.replaceState(null,'','/'+location.search)}}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable} antialiased`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: motionBoot }} />
+        <script dangerouslySetInnerHTML={{ __html: motionBoot + reloadTop }} />
       </head>
       <body className="min-h-dvh">
         <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-paper/90 backdrop-blur-[2px]">
