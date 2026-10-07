@@ -43,7 +43,7 @@ input (WhatsApp / Telegram / website / Android share)
 - **Evidence:** Google Fact Check Tools API, Tavily / Serper / DuckDuckGo, trafilatura
 - **Database:** MongoDB Atlas (free M0) — repeat forwards matched by a normalised-text fingerprint
 - **Voice:** edge-tts neural voices (Hindi, Marathi, English)
-- **Bots:** WhatsApp Cloud API, Telegram Bot API
+- **Bots:** Telegram Bot API; WhatsApp via the Twilio Sandbox (no business verification needed; Meta Cloud API adapter also included)
 
 ## Run locally
 

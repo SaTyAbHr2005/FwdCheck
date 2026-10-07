@@ -18,6 +18,7 @@ import pipeline  # noqa: E402
 import ratelimit  # noqa: E402
 import voice  # noqa: E402
 import telegram_bot  # noqa: E402
+import twilio_bot  # noqa: E402
 import whatsapp_bot  # noqa: E402
 from llm import LLMError  # noqa: E402
 from models import CheckResult, TrendingItem  # noqa: E402
@@ -132,3 +133,15 @@ async def wa_webhook(req: Request, bg: BackgroundTasks):
         raise HTTPException(403)
     bg.add_task(whatsapp_bot.handle, await req.json())
     return {"ok": True}
+
+
+@app.post("/twilio/webhook")
+async def twilio_webhook(req: Request, bg: BackgroundTasks):
+    form = {k: str(v) for k, v in (await req.form()).items()}
+    # Twilio signs the public https URL it called; behind Render's proxy req.url says http, so rebuild it.
+    url = f"{req.headers.get('x-forwarded-proto', req.url.scheme)}://{req.headers.get('host')}{req.url.path}"
+    token = os.environ.get("TWILIO_AUTH_TOKEN")
+    if not token or not twilio_bot.valid_signature(url, form, req.headers.get("X-Twilio-Signature"), token):
+        raise HTTPException(403)
+    bg.add_task(twilio_bot.handle, form, url.removesuffix(req.url.path))
+    return Response("<Response/>", media_type="application/xml")   # empty TwiML: replies are sent via the REST API

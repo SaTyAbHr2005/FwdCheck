@@ -41,9 +41,16 @@ def mongodb():
     MongoClient(E("MONGODB_URI"), serverSelectionTimeoutMS=8000).admin.command("ping")
 
 
+def twilio():
+    sid = E("TWILIO_ACCOUNT_SID")
+    httpx.get(f"https://api.twilio.com/2010-04-01/Accounts/{sid}.json", auth=(sid, E("TWILIO_AUTH_TOKEN")),
+              timeout=20).raise_for_status()
+
+
 CHECKS = [("Gemini", ["GEMINI_API_KEY", "GEMINI_MODEL"], gemini), ("Groq", ["GROQ_API_KEY"], groq),
           ("FactCheck", ["FACTCHECK_API_KEY"], factcheck), ("Tavily", ["TAVILY_API_KEY"], tavily),
-          ("Serper", ["SERPER_API_KEY"], serper), ("MongoDB", ["MONGODB_URI"], mongodb)]
+          ("Serper", ["SERPER_API_KEY"], serper), ("MongoDB", ["MONGODB_URI"], mongodb),
+          ("Twilio", ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"], twilio)]
 
 
 def hide_secrets(msg: str) -> str:
