@@ -10,8 +10,10 @@ E = os.environ.get
 
 def gemini():
     from google import genai
+    from google.genai import types
     client = genai.Client(api_key=E("GEMINI_API_KEY"))     # keep a reference: the client closes when garbage-collected
-    assert client.models.generate_content(model=E("GEMINI_MODEL"), contents="Say OK").text
+    off = types.GenerateContentConfig(automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True))
+    assert client.models.generate_content(model=E("GEMINI_MODEL"), contents="Say OK", config=off).text
 
 
 def groq():
