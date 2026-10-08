@@ -5,12 +5,20 @@ import { useRouter } from "next/navigation";
 import { fromShare, postCheck } from "@/lib/api";
 import CheckingScreen, { type Submitted } from "@/components/checking-screen";
 
+// What the phone's Share menu actually delivered, shown when a share fails (field: value / file name, type, size).
+function describe(fd: FormData): string {
+  const parts = [...fd.entries()].map(([k, v]) =>
+    typeof v === "string" ? `${k}: “${v.slice(0, 40)}”` : `${k}: ${v.name || "unnamed"} (${v.type || "no type"}, ${v.size} bytes)`);
+  return parts.join(" · ") || "nothing";
+}
+
 // Opened by public/sw.js right after Android "Share -> FwdCheck"; the shared item waits in Cache Storage.
 export default function ShareChecking() {
   const router = useRouter();
   const started = useRef(false); // React dev mode runs effects twice; check only once
   const [err, setErr] = useState("");
   const [submitted, setSubmitted] = useState<Submitted>();
+  const [received, setReceived] = useState("");
 
   useEffect(() => {
     if (started.current) return;
@@ -21,7 +29,10 @@ export default function ShareChecking() {
         const saved = await cache.match("/share-data");
         if (!saved) throw new Error("Nothing was shared. Paste the message on the home page instead.");
         await cache.delete("/share-data");
-        const fd = fromShare(await saved.formData());
+        const raw = await saved.formData();
+        const atShare = saved.headers.get("x-share-received");
+        setReceived(describe(raw) + (atShare ? ` (at share time: ${decodeURIComponent(atShare)})` : ""));
+        const fd = fromShare(raw);
         setSubmitted({ text: (fd.get("text") as string | null) ?? undefined, file: fd.get("file") as File | null });
         router.replace(`/r/${await postCheck(fd)}`);
       } catch (e) {
@@ -37,6 +48,7 @@ export default function ShareChecking() {
       <h1 className="mt-4 font-serif text-5xl leading-[0.95] sm:text-6xl">Couldn&apos;t check this one.</h1>
       <p role="alert" className="mt-6 text-lg text-muted">{err}</p>
       <Link href="/#check" className="mt-8 self-start rounded-full bg-ink px-6 py-3 text-paper hover:bg-signal">Try on the home page →</Link>
+      {received && <p className="mt-10 break-all border-t border-line pt-4 font-mono text-[11px] leading-relaxed text-muted">Received from your phone: {received}</p>}
     </main>
   );
 }
