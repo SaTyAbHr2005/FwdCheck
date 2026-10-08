@@ -62,7 +62,7 @@ export default function CheckForm({ initialError }: { initialError?: string }) {
       <div className="flex flex-wrap items-center gap-2 px-2 pb-1 pt-3">
         <label className="cursor-pointer rounded-full border border-line px-3 py-2 font-mono text-[11px] uppercase tracking-wider hover:border-ink">
           + Screenshot · voice · PDF
-          <input type="file" accept="image/*,audio/*,application/pdf,.opus,.ogg,.m4a,.heic,.heif" className="sr-only" disabled={busy}
+          <input type="file" accept="image/*,audio/*,application/pdf,.opus,.ogg,.m4a,.heic,.heif,text/plain,.txt" className="sr-only" disabled={busy}
             onChange={e => setFile(e.target.files?.[0] ?? null)} />
         </label>
         <span className="hidden font-mono text-[11px] text-muted sm:inline">or drop a file</span>

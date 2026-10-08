@@ -33,13 +33,19 @@ export const FLAG: Record<string, string> = {
   miracle: "Miracle claim", suspicious_link: "Suspicious link", other: "Other trick",
 };
 
-/** Android share-target fields (text, url, file) -> the /check form. */
+// A share that carries only a file's name ("circular.pdf"): Android dropped the file itself.
+const JUST_A_FILENAME = /^[^\s/\\]+\.[a-z0-9]{2,5}$/i;
+
+/** Android share-target fields (text, url, file) -> the /check form. Throws if the shared file didn't arrive. */
 export function fromShare(inFd: FormData): FormData {
   const fd = new FormData();
   const text = [inFd.get("text"), inFd.get("url")].filter(v => typeof v === "string" && v).join(" ").trim();
-  if (text) fd.append("text", text);
   const file = inFd.get("file");
-  if (file instanceof File && file.size > 0) fd.append("file", file);
+  const hasFile = typeof file !== "string" && !!file && file.size > 0;   // not instanceof: server runtimes differ
+  if (!hasFile && (!text || JUST_A_FILENAME.test(text)))
+    throw new Error("The file didn't come through from your phone's Share menu. Open FwdCheck and tap “+ Screenshot · voice · PDF” to upload it instead.");
+  if (text && !(hasFile && JUST_A_FILENAME.test(text))) fd.append("text", text);
+  if (hasFile) fd.append("file", file);
   return fd;
 }
 

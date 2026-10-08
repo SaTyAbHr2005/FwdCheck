@@ -33,7 +33,8 @@ ALLOWED = ("image/", "audio/", "application/pdf")
 # iPhone .m4a memos and HEIC photos), so fall back to the file extension. Gemini reads all of these.
 BY_EXT = {"opus": "audio/ogg", "ogg": "audio/ogg", "oga": "audio/ogg", "m4a": "audio/mp4", "aac": "audio/aac",
           "mp3": "audio/mpeg", "wav": "audio/wav", "amr": "audio/amr", "heic": "image/heic", "heif": "image/heif",
-          "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "pdf": "application/pdf"}
+          "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "pdf": "application/pdf",
+          "txt": "text/plain"}
 CHECKS_PER_MINUTE = int(os.environ.get("CHECKS_PER_MINUTE", "6"))
 
 
@@ -69,12 +70,14 @@ async def check(request: Request, text: str | None = Form(None), url: str | None
     data = mime = None
     if file and file.filename:
         data = await file.read()
+        if len(data) > MAX_FILE:
+            raise HTTPException(413, "File too large (max 15 MB)")
         mime = (file.content_type or "").split(";")[0]
         if not mime.startswith(ALLOWED):
             mime = BY_EXT.get(file.filename.rsplit(".", 1)[-1].lower(), mime)
-        if len(data) > MAX_FILE:
-            raise HTTPException(413, "File too large (max 15 MB)")
-        if not mime.startswith(ALLOWED):
+        if mime == "text/plain":            # a forward saved as a .txt file: its contents are the message
+            text, data, mime = data.decode("utf-8", errors="replace"), None, None
+        elif not mime.startswith(ALLOWED):
             raise HTTPException(415, "Send text, an image, audio, a PDF or a link")
     if not ((text and text.strip()) or url or data):
         raise HTTPException(400, "Nothing to check")

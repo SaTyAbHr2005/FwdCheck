@@ -37,7 +37,10 @@
             "application/pdf",
             ".opus",
             ".m4a",
-            ".heic"
+            ".heic",
+            "text/plain",
+            ".txt",
+            "application/octet-stream"
           ]
         }
       ]

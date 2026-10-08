@@ -54,6 +54,20 @@ def test_phone_files_get_their_type_from_the_extension(monkeypatch, name, sent, 
     assert seen["mime"] == expected
 
 
+def test_text_file_is_read_as_the_message(monkeypatch):
+    seen = {}
+
+    async def fake(text, url, data, mime, channel):
+        seen.update(text=text, data=data, mime=mime)
+        return RESULT
+    monkeypatch.setattr(pipeline, "run_check", fake)
+    body = "RBI ne ₹2000 ke note band kar diye".encode()
+    # Android shares a .txt forward with the file name as text; the file's contents must win
+    r = client.post("/check", data={"text": "forward.txt"}, files={"file": ("forward.txt", body, "application/octet-stream")})
+    assert r.status_code == 200
+    assert seen == {"text": body.decode(), "data": None, "mime": None}
+
+
 def test_llm_down_gives_503(monkeypatch):
     async def boom(*a, **k):
         raise LLMError("quota")
